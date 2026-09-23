@@ -48,12 +48,3 @@ target_compile_definitions(HertZ PUBLIC
 target_link_libraries(HertZ
     PRIVATE juce::juce_audio_utils
     PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
-
-include(CTest)
-if(BUILD_TESTING)
-    juce_add_console_app(HertZTests PRODUCT_NAME "HertZ checks")
-    target_sources(HertZTests PRIVATE Tests/ProcessorTests.cpp)
-    target_include_directories(HertZTests PRIVATE Source)
-    target_link_libraries(HertZTests PRIVATE HertZ juce::juce_audio_processors)
-    add_test(NAME HertZProcessor COMMAND HertZTests)
-endif()

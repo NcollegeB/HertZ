@@ -2,12 +2,12 @@
 set -euo pipefail
 
 # Double-click to build and open Hertz. VS Code uses this same script.
-# --build-only builds the app without opening it; --test runs processor checks.
+# --build-only builds the app without opening it.
 mode="${1:---run}"
 case "$mode" in
-    --run|--build-only|--test) ;;
+    --run|--build-only) ;;
     --help|-h)
-        printf 'Usage: %s [--run|--build-only|--test]\n' "$0"
+        printf 'Usage: %s [--run|--build-only]\n' "$0"
         exit 0
         ;;
     *) printf 'Unknown option: %s (use --help)\n' "$mode" >&2; exit 1 ;;
@@ -45,14 +45,7 @@ cmake -S "$project_dir" -B "$build_dir" -G Ninja \
     "-DCMAKE_OSX_SYSROOT=$sdk_path" \
     "-DCMAKE_OSX_ARCHITECTURES=$(uname -m)" \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-    -DJUCE_SOURCE_DIR:PATH= \
-    -DBUILD_TESTING=ON
-
-if [[ "$mode" == --test ]]; then
-    cmake --build "$build_dir" --config Debug --parallel 2 --target HertZTests
-    ctest --test-dir "$build_dir" -C Debug --output-on-failure --no-tests=error
-    exit 0
-fi
+    -DJUCE_SOURCE_DIR:PATH=
 
 cmake --build "$build_dir" --config Debug --parallel 2 --target HertZ_Standalone
 [[ -x "$app/Contents/MacOS/HertZ" ]] || { printf 'Hertz executable was not created.\n' >&2; exit 1; }

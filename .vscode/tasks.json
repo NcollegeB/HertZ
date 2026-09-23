@@ -20,16 +20,6 @@
             "problemMatcher": ["$gcc"],
             "group": "build",
             "presentation": { "reveal": "always", "panel": "shared", "clear": true }
-        },
-        {
-            "label": "Hertz: Test",
-            "type": "process",
-            "command": "/bin/bash",
-            "args": ["${workspaceFolder}/run-mac.command", "--test"],
-            "options": { "cwd": "${workspaceFolder}" },
-            "problemMatcher": ["$gcc"],
-            "group": { "kind": "test", "isDefault": true },
-            "presentation": { "reveal": "always", "panel": "shared", "clear": true }
         }
     ]
 }

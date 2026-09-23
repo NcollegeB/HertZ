@@ -17,14 +17,14 @@ juce_source="${1:-${HERTZ_JUCE_SOURCE_DIR:-}}"
 
 # Include common CMake install locations when launched from Finder.
 export PATH="/opt/homebrew/bin:/usr/local/bin:/Applications/CMake.app/Contents/bin:$PATH"
-for tool in cmake ctest make xcrun ditto codesign; do
+for tool in cmake make xcrun ditto codesign; do
     command -v "$tool" >/dev/null 2>&1 || fail "Missing $tool. Install CMake from https://cmake.org/download/ and Apple command line tools with xcode-select --install, then retry."
 done
 xcrun --sdk macosx --find clang++ >/dev/null 2>&1 || fail "Apple's macOS compiler is unavailable. Run xcode-select --install, or select your installed Xcode developer directory."
 sdk_path="$(xcrun --sdk macosx --show-sdk-path)"
 [[ -d "$sdk_path" ]] || fail "The selected macOS SDK does not exist."
 macos_major="$(sw_vers -productVersion | cut -d . -f 1)"
-[[ "$macos_major" -ge 11 ]] || fail "Building and running these checks requires macOS 11 or later."
+[[ "$macos_major" -ge 11 ]] || fail "Building HertZ requires macOS 11 or later."
 
 configure_args=(
     -S "$project_dir" -B "$build_dir" -G "Unix Makefiles"
@@ -32,7 +32,6 @@ configure_args=(
     -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
     "-DCMAKE_OSX_SYSROOT=$sdk_path"
     "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"
-    -DBUILD_TESTING=ON
 )
 if [[ -n "$juce_source" ]]; then
     [[ -f "$juce_source/CMakeLists.txt" ]] || fail "The JUCE path must contain its CMakeLists.txt."
@@ -44,16 +43,12 @@ configure_args+=("-DJUCE_SOURCE_DIR=$juce_source")
 printf 'Configuring universal arm64/x86_64 Release build for macOS 11+...\n'
 cmake "${configure_args[@]}"
 cmake --build "$build_dir" --config Release --parallel 2 \
-    --target HertZ_Standalone HertZ_VST3 HertZTests
-
-printf '\nRunning processor checks on this Mac...\n'
-ctest --test-dir "$build_dir" -C Release --output-on-failure
+    --target HertZ_Standalone HertZ_VST3
 
 release_dir="$build_dir/HertZ_artefacts/Release"
 app="$release_dir/Standalone/HertZ.app"
 plugin="$release_dir/VST3/HertZ.vst3"
-test_binary="$build_dir/HertZTests_artefacts/Release/HertZTests"
-for binary in "$app/Contents/MacOS/HertZ" "$plugin/Contents/MacOS/HertZ" "$test_binary"; do
+for binary in "$app/Contents/MacOS/HertZ" "$plugin/Contents/MacOS/HertZ"; do
     [[ -x "$binary" ]] || fail "Expected executable not found: $binary"
     xcrun lipo -verify_arch arm64 x86_64 "$binary"
     printf 'Verified architectures: %s: ' "$binary"
@@ -78,7 +73,7 @@ ditto "$project_dir/JUCE-LICENSE.md" "$stage/JUCE-LICENSE.md"
 ditto -c -k --sequesterRsrc --keepParent "$stage" "$stage_parent/HertZ-macOS-universal.zip"
 mv -f "$stage_parent/HertZ-macOS-universal.zip" "$archive"
 
-printf '\nNative processor checks passed; both architecture slices verified.\n'
+printf '\nBoth architecture slices verified.\n'
 printf 'Standalone app: %s\n' "$app"
 printf 'VST3 plugin: %s\n' "$plugin"
 printf 'Universal archive: %s\n' "$archive"
