@@ -1,0 +1,35 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Hertz: Build and Run",
+            "type": "process",
+            "command": "/bin/bash",
+            "args": ["${workspaceFolder}/run-mac.command"],
+            "options": { "cwd": "${workspaceFolder}" },
+            "problemMatcher": ["$gcc"],
+            "group": { "kind": "build", "isDefault": true },
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+        },
+        {
+            "label": "Hertz: Build",
+            "type": "process",
+            "command": "/bin/bash",
+            "args": ["${workspaceFolder}/run-mac.command", "--build-only"],
+            "options": { "cwd": "${workspaceFolder}" },
+            "problemMatcher": ["$gcc"],
+            "group": "build",
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+        },
+        {
+            "label": "Hertz: Test",
+            "type": "process",
+            "command": "/bin/bash",
+            "args": ["${workspaceFolder}/run-mac.command", "--test"],
+            "options": { "cwd": "${workspaceFolder}" },
+            "problemMatcher": ["$gcc"],
+            "group": { "kind": "test", "isDefault": true },
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+        }
+    ]
+}

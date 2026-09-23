@@ -1,0 +1,63 @@
+name: Build macOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'build/macos-*'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build universal app and VST3
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Build and test on Apple Silicon
+        run: bash ./build-mac.command
+      - name: Package test executable
+        run: |
+          mkdir -p mac-test-tools
+          ditto build-mac/HertZTests_artefacts/Release/HertZTests mac-test-tools/HertZTests
+          ditto -c -k --keepParent mac-test-tools HertZ-test-tools.zip
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: HertZ-macOS-universal
+          path: dist-mac/HertZ-macOS-universal.zip
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: HertZ-test-tools
+          path: HertZ-test-tools.zip
+          if-no-files-found: error
+          retention-days: 3
+
+  test-intel:
+    name: Test the same build on Intel
+    needs: build
+    runs-on: macos-15-intel
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: HertZ-test-tools
+      - name: Run processor tests
+        run: |
+          ditto -x -k HertZ-test-tools.zip .
+          arch -x86_64 ./mac-test-tools/HertZTests
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: HertZ-macOS-universal
+      - name: Verify packaged app and plugin
+        run: |
+          ditto -x -k HertZ-macOS-universal.zip .
+          lipo -verify_arch arm64 x86_64 HertZ/HertZ.app/Contents/MacOS/HertZ
+          lipo -verify_arch arm64 x86_64 HertZ/HertZ.vst3/Contents/MacOS/HertZ
+          codesign --verify --deep --strict HertZ/HertZ.app
+          codesign --verify --deep --strict HertZ/HertZ.vst3

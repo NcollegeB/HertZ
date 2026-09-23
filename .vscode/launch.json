@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Hertz: Build and Debug",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build-vscode/HertZ_artefacts/Debug/Standalone/HertZ.app/Contents/MacOS/HertZ",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Hertz: Build",
+            "terminal": "console",
+            "env": { "DEVELOPER_DIR": "/Library/Developer/CommandLineTools" }
+        }
+    ]
+}

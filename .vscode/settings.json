@@ -1,0 +1,36 @@
+{
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/build-vscode/compile_commands.json",
+    "C_Cpp.default.compilerPath": "/Library/Developer/CommandLineTools/usr/bin/clang++",
+    "C_Cpp.default.intelliSenseMode": "macos-clang-arm64",
+    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.intelliSenseEngine": "default",
+    "cmake.cmakePath": "/opt/homebrew/bin/cmake",
+    "cmake.buildDirectory": "${workspaceFolder}/build-vscode",
+    "cmake.generator": "Ninja",
+    "cmake.configureOnOpen": true,
+    "task.saveBeforeRun": "always",
+    "lldb.adapterEnv": {
+        "DEVELOPER_DIR": "/Library/Developer/CommandLineTools"
+    },
+    "cmake.environment": {
+        "DEVELOPER_DIR": "/Library/Developer/CommandLineTools"
+    },
+    "cmake.configureSettings": {
+        "CMAKE_C_COMPILER": "/Library/Developer/CommandLineTools/usr/bin/clang",
+        "CMAKE_CXX_COMPILER": "/Library/Developer/CommandLineTools/usr/bin/clang++",
+        "CMAKE_MAKE_PROGRAM": "/opt/homebrew/bin/ninja",
+        "CMAKE_OSX_SYSROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "JUCE_SOURCE_DIR": ""
+    },
+    "[cpp]": {
+        "editor.suggestOnTriggerCharacters": true,
+        "editor.quickSuggestions": {
+            "other": "on",
+            "comments": "off",
+            "strings": "off"
+        }
+    }
+}
