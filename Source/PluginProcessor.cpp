@@ -10,8 +10,16 @@ HertzAudioProcessor::HertzAudioProcessor()
                      juce::AudioParameterFloatAttributes().withLabel("dB"))})
 {
     volumeDb = parameters.getRawParameterValue("volume");
+
+    constexpr int numOfVoices = 8;
+
     synth.addSound(new SineSound());
-    synth.addVoice(new SineVoice());
+
+    for(int i = 0; i < numOfVoices; i++)
+    {
+        synth.addVoice(new SineVoice());
+    }
+
     synth.setNoteStealingEnabled(true);
     synth.setMinimumRenderingSubdivisionSize(1, true);
 }
@@ -28,7 +36,7 @@ void HertzAudioProcessor::reset()
     keyboardState.reset();
 
     synth.allNotesOff(0, false);
-    
+
     gain.setCurrentAndTargetValue(juce::Decibels::decibelsToGain(volumeDb->load()));
 
 }

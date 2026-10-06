@@ -23,7 +23,7 @@ public:
         juce::SynthesiserVoice::setCurrentPlaybackSampleRate(rate);
         if (rate > 0.0)
             envelope.setSampleRate(rate);
-        envelope.setParameters({0.005f, 0.0f, 1.0f, 0.02f});
+        envelope.setParameters({0.005f, 0.0f, 1.0f, 0.05f});
     }
 
     void startNote(int midiNote, float velocity, juce::SynthesiserSound *, int) override
@@ -61,6 +61,7 @@ public:
         {
             const auto sample = static_cast<float>(std::sin(phase)) * level * envelope.getNextSample();
             phase += phaseStep;
+
             if (phase >= juce::MathConstants<double>::twoPi)
                 phase -= juce::MathConstants<double>::twoPi;
 
