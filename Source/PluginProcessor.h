@@ -3,10 +3,10 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "SineVoice.h"
 
-class HertZAudioProcessor final : public juce::AudioProcessor
+class HertzAudioProcessor final : public juce::AudioProcessor
 {
 public:
-    HertZAudioProcessor();
+    HertzAudioProcessor();
 
     void prepareToPlay(double sampleRate, int maximumBlockSize) override;
     void releaseResources() override { reset(); }
@@ -37,5 +37,5 @@ private:
     std::atomic<float>* volumeDb = nullptr;
     juce::SmoothedValue<float> gain;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HertZAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HertzAudioProcessor)
 };

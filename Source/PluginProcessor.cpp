@@ -1,6 +1,6 @@
 #include "PluginProcessor.h"
 
-HertZAudioProcessor::HertZAudioProcessor()
+HertzAudioProcessor::HertzAudioProcessor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       parameters(*this, nullptr, "BareToneState",
       {
@@ -17,27 +17,27 @@ HertZAudioProcessor::HertZAudioProcessor()
     synth.setMinimumRenderingSubdivisionSize(1, true);
 }
 
-void HertZAudioProcessor::prepareToPlay(double sampleRate, int)
+void HertzAudioProcessor::prepareToPlay(double sampleRate, int)
 {
     synth.setCurrentPlaybackSampleRate(sampleRate);
     gain.reset(sampleRate, 0.01);
     reset();
 }
 
-void HertZAudioProcessor::reset()
+void HertzAudioProcessor::reset()
 {
     synth.allNotesOff(0, false);
     gain.setCurrentAndTargetValue(juce::Decibels::decibelsToGain(volumeDb->load()));
 }
 
-bool HertZAudioProcessor::isBusesLayoutSupported(const BusesLayout& layout) const
+bool HertzAudioProcessor::isBusesLayoutSupported(const BusesLayout& layout) const
 {
     return layout.getMainInputChannelSet().isDisabled()
         && (layout.getMainOutputChannelSet() == juce::AudioChannelSet::mono()
          || layout.getMainOutputChannelSet() == juce::AudioChannelSet::stereo());
 }
 
-void HertZAudioProcessor::processBlock(juce::AudioBuffer<float>& audio, juce::MidiBuffer& midi)
+void HertzAudioProcessor::processBlock(juce::AudioBuffer<float>& audio, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
     // A synth generates every sample, stale host buffer contents must not pass through.
@@ -54,19 +54,19 @@ void HertZAudioProcessor::processBlock(juce::AudioBuffer<float>& audio, juce::Mi
     }
 }
 
-juce::AudioProcessorEditor* HertZAudioProcessor::createEditor()
+juce::AudioProcessorEditor* HertzAudioProcessor::createEditor()
 {
     // JUCE supplies the complete UI from the parameter list.
     return new juce::GenericAudioProcessorEditor(*this);
 }
 
-void HertZAudioProcessor::getStateInformation(juce::MemoryBlock& destination)
+void HertzAudioProcessor::getStateInformation(juce::MemoryBlock& destination)
 {
     if (const auto xml = parameters.copyState().createXml())
         copyXmlToBinary(*xml, destination);
 }
 
-void HertZAudioProcessor::setStateInformation(const void* data, int size)
+void HertzAudioProcessor::setStateInformation(const void* data, int size)
 {
     if (const auto xml = getXmlFromBinary(data, size))
         if (xml->hasTagName(parameters.state.getType()))
@@ -75,5 +75,5 @@ void HertZAudioProcessor::setStateInformation(const void* data, int size)
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new HertZAudioProcessor();
+    return new HertzAudioProcessor();
 }

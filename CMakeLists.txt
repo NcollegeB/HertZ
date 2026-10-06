@@ -39,7 +39,10 @@ juce_add_plugin(HertZ
 target_sources(HertZ PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
-    Source/SineVoice.h)
+    Source/SineVoice.h
+    Source/PluginEditor.h
+    Source/PluginEditor.cpp
+)
 target_compile_features(HertZ PUBLIC cxx_std_17)
 target_compile_definitions(HertZ PUBLIC
     JUCE_WEB_BROWSER=0
