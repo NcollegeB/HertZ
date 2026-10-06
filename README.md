@@ -7,7 +7,7 @@ Currently it contains a single oscillator, Built in MIDI input, volume, Sample r
 
 ## How to use it
 
-Coming soon....
+Run it with `open "/Users/nathan/Documents/HertZ/build-mac/HertZ_artefacts/Release/Standalone/HertZ.app"`
 
 ## How to build it
 

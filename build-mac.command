@@ -5,7 +5,7 @@ set -euo pipefail
 # Requires macOS 11+, Apple command line tools, and CMake 3.22 or newer.
 
 fail() { printf 'Error: %s\n' "$*" >&2; exit 1; }
-
+    
 [[ "$(uname -s)" == "Darwin" ]] || fail "Run this script on a Mac."
 [[ $# -le 1 ]] || fail "Usage: bash build-mac.command [path-to-JUCE]"
 

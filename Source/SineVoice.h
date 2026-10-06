@@ -50,6 +50,8 @@ public:
     void pitchWheelMoved(int) override {}
     void controllerMoved(int, int) override {}
 
+
+    // render the next block of samples, SINE * VELOC * ENV * smoothed master vol
     void renderNextBlock(juce::AudioBuffer<float> &output, int start, int count) override
     {
         if (!isVoiceActive())
