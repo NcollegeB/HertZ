@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Double-click to build and open Hertz. VS Code uses this same script.
+# Double-click to build and open HertZ with the same preset used by VS Code.
 # --build-only builds the app without opening it.
 mode="${1:---run}"
 case "$mode" in
@@ -16,38 +16,26 @@ esac
 [[ "$(uname -s)" == "Darwin" ]] || { printf 'This launcher requires macOS.\n' >&2; exit 1; }
 
 project_dir="$(cd "$(dirname "$0")" && pwd -P)"
-build_dir="$project_dir/build-vscode"
+build_dir="$project_dir/build/macos-debug"
 app="$build_dir/HertZ_artefacts/Debug/Standalone/HertZ.app"
 
-# Finder does not inherit Homebrew's PATH. Use the working standalone Apple tools
-# for this process, without changing the system's selected Xcode installation.
+# Finder does not inherit Homebrew's PATH. Respect the selected Apple tools.
 export PATH="/opt/homebrew/bin:/usr/local/bin:/Applications/CMake.app/Contents/bin:$PATH"
-if [[ -x /Library/Developer/CommandLineTools/usr/bin/clang++ ]]; then
-    export DEVELOPER_DIR=/Library/Developer/CommandLineTools
-fi
-for tool in cmake ninja xcrun; do
+for tool in cmake make xcrun; do
     command -v "$tool" >/dev/null 2>&1 || {
-        printf 'Missing %s. Install CMake, Ninja, and Apple Command Line Tools.\n' "$tool" >&2
+        printf 'Missing %s. Install CMake and Apple Command Line Tools.\n' "$tool" >&2
         exit 1
     }
 done
 
-sdk_path="$(xcrun --sdk macosx --show-sdk-path)"
-c_compiler="$(xcrun --sdk macosx --find clang)"
-cpp_compiler="$(xcrun --sdk macosx --find clang++)"
+xcrun --sdk macosx --find clang++ >/dev/null
+xcrun --sdk macosx --show-sdk-path >/dev/null
 
 printf 'Preparing Hertz for this Mac...\n'
-cmake -S "$project_dir" -B "$build_dir" -G Ninja \
-    -DCMAKE_BUILD_TYPE=Debug \
-    "-DCMAKE_C_COMPILER=$c_compiler" \
-    "-DCMAKE_CXX_COMPILER=$cpp_compiler" \
-    "-DCMAKE_MAKE_PROGRAM=$(command -v ninja)" \
-    "-DCMAKE_OSX_SYSROOT=$sdk_path" \
-    "-DCMAKE_OSX_ARCHITECTURES=$(uname -m)" \
-    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-    -DJUCE_SOURCE_DIR:PATH=
+cd "$project_dir"
+cmake --preset macos-debug
 
-cmake --build "$build_dir" --config Debug --parallel 2 --target HertZ_Standalone
+cmake --build --preset macos-debug --target HertZ_Standalone
 [[ -x "$app/Contents/MacOS/HertZ" ]] || { printf 'Hertz executable was not created.\n' >&2; exit 1; }
 printf '\nBuilt: %s\n' "$app"
 if [[ "$mode" == --run ]]; then

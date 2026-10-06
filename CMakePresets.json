@@ -1,0 +1,91 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": { "major": 3, "minor": 22, "patch": 0 },
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": true
+            }
+        },
+        {
+            "name": "windows-base",
+            "inherits": "base",
+            "hidden": true,
+            "generator": "Ninja",
+            "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
+            "architecture": { "value": "x64", "strategy": "external" },
+            "toolset": { "value": "host=x64", "strategy": "external" },
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "cl",
+                "CMAKE_CXX_COMPILER": "cl"
+            }
+        },
+        {
+            "name": "macos-base",
+            "inherits": "base",
+            "hidden": true,
+            "generator": "Unix Makefiles",
+            "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" },
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "/usr/bin/clang",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+                "CMAKE_OSX_DEPLOYMENT_TARGET": "11.0"
+            }
+        },
+        {
+            "name": "windows-debug",
+            "displayName": "Windows - Debug (MSVC x64)",
+            "description": "Requires MSVC x64, a Windows SDK, CMake and Ninja. CMake Tools loads the compiler environment; use a Developer Command Prompt for command-line builds.",
+            "inherits": "windows-base",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+        },
+        {
+            "name": "windows-release",
+            "displayName": "Windows - Release (MSVC x64)",
+            "inherits": "windows-base",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+        },
+        {
+            "name": "macos-debug",
+            "displayName": "macOS - Debug (native architecture)",
+            "description": "Requires CMake and Apple Command Line Tools or Xcode. Builds natively on Apple Silicon or Intel.",
+            "inherits": "macos-base",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+        },
+        {
+            "name": "macos-release",
+            "displayName": "macOS - Release (native architecture)",
+            "inherits": "macos-base",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "windows-debug",
+            "configurePreset": "windows-debug",
+            "targets": ["HertZ_Standalone", "HertZ_VST3"],
+            "jobs": 4
+        },
+        {
+            "name": "windows-release",
+            "configurePreset": "windows-release",
+            "targets": ["HertZ_Standalone", "HertZ_VST3"],
+            "jobs": 4
+        },
+        {
+            "name": "macos-debug",
+            "configurePreset": "macos-debug",
+            "targets": ["HertZ_Standalone", "HertZ_VST3"],
+            "jobs": 2
+        },
+        {
+            "name": "macos-release",
+            "configurePreset": "macos-release",
+            "targets": ["HertZ_Standalone", "HertZ_VST3"],
+            "jobs": 2
+        }
+    ]
+}
