@@ -39,8 +39,8 @@ bool HertZAudioProcessor::isBusesLayoutSupported(const BusesLayout& layout) cons
 
 void HertZAudioProcessor::processBlock(juce::AudioBuffer<float>& audio, juce::MidiBuffer& midi)
 {
-   /*  juce::ScopedNoDenormals noDenormals;
-     A synth generates every sample, stale host buffer contents must not pass through.
+    juce::ScopedNoDenormals noDenormals;
+    // A synth generates every sample, stale host buffer contents must not pass through.
      audio.clear();
     synth.renderNextBlock(audio, midi, 0, audio.getNumSamples());
     midi.clear();
@@ -51,22 +51,7 @@ void HertZAudioProcessor::processBlock(juce::AudioBuffer<float>& audio, juce::Mi
         const auto nextGain = gain.getNextValue();
         for (int channel = 0; channel < audio.getNumChannels(); ++channel)
             audio.getWritePointer(channel)[sample] *= nextGain;
-    } */
-
-
-    juce::ScopedNoDenormals noDenormals;
-
-
-    audio.clear();
-
-    synth.renderNextBlock(audio, midi, 0, audio.getNumSamples());
-    midi.clear();
-
-    
-
-    
-    
-
+    }
 }
 
 juce::AudioProcessorEditor* HertZAudioProcessor::createEditor()
