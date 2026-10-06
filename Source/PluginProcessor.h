@@ -31,11 +31,27 @@ public:
     void getStateInformation(juce::MemoryBlock&) override;
     void setStateInformation(const void*, int) override;
 
+
+    // midi kb on screen 
+    juce::MidiKeyboardState& getKeyboardState()
+    {
+        return keyboardState;
+    }
+
+    // vol slide
+    juce::AudioProcessorValueTreeState& getParameterState()
+    {
+        return parameters;
+    }
+
 private:
     juce::Synthesiser synth;
     juce::AudioProcessorValueTreeState parameters;
     std::atomic<float>* volumeDb = nullptr;
     juce::SmoothedValue<float> gain;
+
+
+    juce::MidiKeyboardState keyboardState;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HertzAudioProcessor)
 };

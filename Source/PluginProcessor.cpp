@@ -1,4 +1,5 @@
 #include "PluginProcessor.h"
+#include "PluginEditor.h"
 
 HertzAudioProcessor::HertzAudioProcessor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
@@ -24,29 +25,33 @@ void HertzAudioProcessor::prepareToPlay(double sampleRate, int)
 
 void HertzAudioProcessor::reset()
 {
+    keyboardState.reset();
+
     synth.allNotesOff(0, false);
+    
     gain.setCurrentAndTargetValue(juce::Decibels::decibelsToGain(volumeDb->load()));
+
 }
 
-<<<<<<< HEAD
 bool HertzAudioProcessor::isBusesLayoutSupported(const BusesLayout& layout) const
-=======
-bool HertZAudioProcessor::isBusesLayoutSupported(const BusesLayout &layout) const
->>>>>>> origin/main
 {
     return layout.getMainInputChannelSet().isDisabled() && (layout.getMainOutputChannelSet() == juce::AudioChannelSet::mono() || layout.getMainOutputChannelSet() == juce::AudioChannelSet::stereo());
 }
 
-<<<<<<< HEAD
 void HertzAudioProcessor::processBlock(juce::AudioBuffer<float>& audio, juce::MidiBuffer& midi)
-=======
-void HertZAudioProcessor::processBlock(juce::AudioBuffer<float> &audio, juce::MidiBuffer &midi)
->>>>>>> origin/main
 {
     juce::ScopedNoDenormals noDenormals;
     // A synth generates every sample, stale host buffer contents must not pass through.
-     audio.clear();
+    audio.clear();
+
+    // add notes to on-screen kb
+    if(audio.getNumSamples() > 0)
+    {
+        keyboardState.processNextMidiBuffer(midi, 0, audio.getNumSamples(), true);
+    }
+
     synth.renderNextBlock(audio, midi, 0, audio.getNumSamples());
+
     midi.clear();
 
     gain.setTargetValue(juce::Decibels::decibelsToGain(volumeDb->load()));
@@ -58,31 +63,18 @@ void HertZAudioProcessor::processBlock(juce::AudioBuffer<float> &audio, juce::Mi
     }
 }
 
-<<<<<<< HEAD
 juce::AudioProcessorEditor* HertzAudioProcessor::createEditor()
-=======
-juce::AudioProcessorEditor *HertZAudioProcessor::createEditor()
->>>>>>> origin/main
 {
-    // JUCE supplies the complete UI from the parameter list.
-    return new juce::GenericAudioProcessorEditor(*this);
+    return new HertzAudioProcessorEditor(*this);
 }
 
-<<<<<<< HEAD
 void HertzAudioProcessor::getStateInformation(juce::MemoryBlock& destination)
-=======
-void HertZAudioProcessor::getStateInformation(juce::MemoryBlock &destination)
->>>>>>> origin/main
 {
     if (const auto xml = parameters.copyState().createXml())
         copyXmlToBinary(*xml, destination);
 }
 
-<<<<<<< HEAD
 void HertzAudioProcessor::setStateInformation(const void* data, int size)
-=======
-void HertZAudioProcessor::setStateInformation(const void *data, int size)
->>>>>>> origin/main
 {
     if (const auto xml = getXmlFromBinary(data, size))
         if (xml->hasTagName(parameters.state.getType()))
