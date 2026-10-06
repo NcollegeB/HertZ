@@ -15,7 +15,20 @@ HertzAudioProcessorEditor::HertzAudioProcessorEditor(HertzAudioProcessor& proces
     keyboardComp.setKeyWidth(24.0f);
     
     addAndMakeVisible(keyboardComp);
-    
+
+    volSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+    volSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 24);
+
+    volSlider.setTextValueSuffix(" dB");
+
+    addAndMakeVisible(volSlider);
+
+
+    // label
+    volLabel.setText("Volume", juce::dontSendNotification);
+    volLabel.setJustificationType(juce::Justification::centredLeft);
+    volLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+
     setSize(640, 300);
 }
 
@@ -28,11 +41,15 @@ void HertzAudioProcessorEditor::paint(juce::Graphics &g)
     g.setColour(juce::Colours::white);
     g.setFont(36.0f);
 
-    g.drawText("Hertz", getLocalBounds(), juce::Justification::centred, true);
+    g.drawText("Hertz", 20, 20, getWidth() - 40, 50, juce::Justification::centred, true);
 
 }
 
 void HertzAudioProcessorEditor::resized()
 {
-    // controls l8r g8r
+    volLabel.setBounds(20, 90, 70, 30);
+
+    volSlider.setBounds(100, 90, getWidth() - 120, 30); 
+
+    keyboardComp.setBounds(20, getHeight() - 120, getWidth() - 40, 100);
 }
