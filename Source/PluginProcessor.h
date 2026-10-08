@@ -45,13 +45,39 @@ public:
     }
 
 private:
+
     juce::Synthesiser synth;
     juce::AudioProcessorValueTreeState parameters;
     std::atomic<float>* volumeDb = nullptr;
     juce::SmoothedValue<float> gain;
 
 
+
+
     juce::MidiKeyboardState keyboardState;
 
+
+    // arpeggiator
+    juce::MidiBuffer arpBuffer;
+
+    // held key
+    int arpRoot = -1;
+
+    int arpNote = -1; 
+    int arpChannel = 1;
+    int arpStep = 0;  
+
+    float arpVelocity = 0.7f;
+
+    double samplesPerStep = 1.0; 
+    double samplesUntilStep = 0.0;
+
+
+
+    void createArp(const juce::MidiBuffer& input, int numSamples); 
+
+
+
+    // boiler
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HertzAudioProcessor)
 };

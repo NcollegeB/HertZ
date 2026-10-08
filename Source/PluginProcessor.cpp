@@ -26,6 +26,13 @@ HertzAudioProcessor::HertzAudioProcessor()
 
 void HertzAudioProcessor::prepareToPlay(double sampleRate, int)
 {
+    constexpr double bpm = 120.0;
+    constexpr double stepsPerBeat = 2.0; 
+
+    samplesPerStep = sampleRate * 60.0 / bpm / stepsPerBeat;
+
+    arpBuffer.ensureSize(8192);
+
     synth.setCurrentPlaybackSampleRate(sampleRate);
     gain.reset(sampleRate, 0.01);
     reset();
@@ -33,6 +40,14 @@ void HertzAudioProcessor::prepareToPlay(double sampleRate, int)
 
 void HertzAudioProcessor::reset()
 {
+
+    arpRoot = -1;
+    arpNote = -1;
+    arpStep = 0; 
+
+    samplesUntilStep = 0.0;
+    arpBuffer.clear();
+
     keyboardState.reset();
 
     synth.allNotesOff(0, false);
@@ -57,6 +72,9 @@ void HertzAudioProcessor::processBlock(juce::AudioBuffer<float>& audio, juce::Mi
     {
         keyboardState.processNextMidiBuffer(midi, 0, audio.getNumSamples(), true);
     }
+
+
+    createArp(midi, audio.getNumSamples());
 
     synth.renderNextBlock(audio, midi, 0, audio.getNumSamples());
 
@@ -92,4 +110,95 @@ void HertzAudioProcessor::setStateInformation(const void* data, int size)
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter()
 {
     return new HertzAudioProcessor();
+}
+
+
+void HertzAudioProcessor::createArp(const juce::MidiBuffer& input, int numSamples)
+{
+    arpBuffer.clear();
+
+    constexpr int intervals[] {0,4,7};
+
+    auto stopCurrentNote = [this](int samplePosition)
+    {
+        if(arpNote >= 0)
+        {
+            arpBuffer.addEvent(
+                juce::MidiMessage::noteOff(arpChannel, arpNote),
+                samplePosition);
+            
+                arpNote = -1;
+        }
+    };
+
+    auto event = input.cbegin();
+
+    // handle midi
+    for(int sample = 0; sample < numSamples; ++sample)
+    {
+        while(event != input.cend() && (*event).samplePosition <= sample)
+        {
+            const auto message = (*event).getMessage();
+            ++event;
+
+            if(message.isNoteOn())
+            {
+                stopCurrentNote(sample);
+
+                arpRoot = message.getNoteNumber();
+                arpChannel = message.getChannel();
+                arpVelocity = message.getFloatVelocity();
+
+                arpStep = 0; 
+                samplesUntilStep = 0.0;
+            }
+            else if (message.isNoteOff())
+            {
+                if(message.getNoteNumber() == arpRoot && message.getChannel() == arpChannel)
+                {
+                    stopCurrentNote(sample);
+                    arpRoot = -1;
+                }
+            }
+            else
+            {
+                // stop playback if midi input
+                if((message.isAllNotesOff() || message.isAllSoundOff()) && message.getChannel() == arpChannel)
+                {
+                    stopCurrentNote(sample);
+                    arpRoot = -1;
+                } 
+
+                arpBuffer.addEvent(message, sample);
+            }
+        }
+
+        if (arpRoot < 0)
+        {
+            continue;
+        }
+
+        // start next chord tone
+
+        if(samplesUntilStep <= 0.0)
+        {
+            stopCurrentNote(sample);
+
+            const int nextNote = arpRoot + intervals[arpStep];
+
+            if(nextNote <= 127)
+            {
+                arpBuffer.addEvent(juce::MidiMessage::noteOn(arpChannel, nextNote ,arpVelocity), sample);
+
+                arpNote = nextNote;
+            }
+
+            arpStep = (arpStep + 1) % 3;
+            samplesUntilStep += samplesPerStep;
+        }
+
+        samplesUntilStep -= 1.0;
+
+    }
+
 }

@@ -29,7 +29,10 @@ HertzAudioProcessorEditor::HertzAudioProcessorEditor(HertzAudioProcessor& proces
     volLabel.setJustificationType(juce::Justification::centredLeft);
     volLabel.setColour(juce::Label::textColourId, juce::Colours::white);
 
-    setSize(640, 300);
+    setResizable(true,true);
+    setResizeLimits(640, 300, 1400,900);
+
+    setSize(1000, 600);
 }
 
 void HertzAudioProcessorEditor::paint(juce::Graphics &g)
