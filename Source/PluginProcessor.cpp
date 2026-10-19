@@ -76,7 +76,8 @@ void HertzAudioProcessor::processBlock(juce::AudioBuffer<float>& audio, juce::Mi
 
     createArp(midi, audio.getNumSamples());
 
-    synth.renderNextBlock(audio, midi, 0, audio.getNumSamples());
+    // Play the generated chord sequence instead of the original held note.
+    synth.renderNextBlock(audio, arpBuffer, 0, audio.getNumSamples());
 
     midi.clear();
 
