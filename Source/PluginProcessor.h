@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "SineVoice.h"
+#include <array>
 
 class HertzAudioProcessor final : public juce::AudioProcessor
 {
@@ -21,7 +22,7 @@ public:
     bool acceptsMidi() const override { return true; }
     bool producesMidi() const override { return false; }
     bool isMidiEffect() const override { return false; }
-    double getTailLengthSeconds() const override { return 0.02; }
+    double getTailLengthSeconds() const override { return 0.05; }
 
     int getNumPrograms() override { return 1; }
     int getCurrentProgram() override { return 0; }
@@ -49,6 +50,10 @@ private:
     juce::Synthesiser synth;
     juce::AudioProcessorValueTreeState parameters;
     std::atomic<float>* volumeDb = nullptr;
+    std::atomic<float>* tempoBpm = nullptr;
+    std::atomic<float>* timingChoice = nullptr;
+    std::atomic<float>* chordChoice = nullptr;
+    std::atomic<float>* playbackChoice = nullptr;
     juce::SmoothedValue<float> gain;
 
 
@@ -63,7 +68,9 @@ private:
     // held key
     int arpRoot = -1;
 
-    int arpNote = -1; 
+    std::array<int, 4> activeNotes {};
+    int activeNoteCount = 0;
+    int lastTiming = -1, lastChord = -1, lastPlayback = -1;
     int arpChannel = 1;
     int arpStep = 0;  
 

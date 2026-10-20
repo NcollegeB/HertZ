@@ -42,6 +42,10 @@ target_sources(HertZ PRIVATE
     Source/SineVoice.h
     Source/PluginEditor.h
     Source/PluginEditor.cpp
+    Source/UI/ControlCard.cpp
+    Source/UI/ChoiceButtons.cpp
+    Source/UI/HertzLookAndFeel.cpp
+    Source/UI/HertzKeyboard.cpp
 )
 target_compile_features(HertZ PUBLIC cxx_std_17)
 target_compile_definitions(HertZ PUBLIC

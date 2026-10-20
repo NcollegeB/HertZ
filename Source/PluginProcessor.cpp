@@ -7,9 +7,26 @@ HertzAudioProcessor::HertzAudioProcessor()
                  {std::make_unique<juce::AudioParameterFloat>(
                      juce::ParameterID{"volume", 1}, "Volume",
                      juce::NormalisableRange<float>{-60.0f, 0.0f, 0.1f}, -18.0f,
-                     juce::AudioParameterFloatAttributes().withLabel("dB"))})
+                     juce::AudioParameterFloatAttributes().withLabel("dB")),
+                  std::make_unique<juce::AudioParameterChoice>(
+                      juce::ParameterID{"timing", 1}, "Timing",
+                      juce::StringArray{"1/1", "1/2", "1/4", "1/8", "1/16", "1/32", "1/64"}, 3),
+                  std::make_unique<juce::AudioParameterChoice>(
+                      juce::ParameterID{"chord", 1}, "Chord",
+                      juce::StringArray{"Major", "Minor", "Maj7", "Min7", "Dominant 7"}, 0),
+                  std::make_unique<juce::AudioParameterChoice>(
+                      juce::ParameterID{"playback", 1}, "Playback",
+                      juce::StringArray{"Ascending", "Descending", "Chord press"}, 0),
+                  std::make_unique<juce::AudioParameterFloat>(
+                      juce::ParameterID{"bpm", 1}, "Tempo",
+                      juce::NormalisableRange<float>{30.0f, 300.0f, 0.1f}, 120.0f,
+                      juce::AudioParameterFloatAttributes().withLabel("BPM"))})
 {
     volumeDb = parameters.getRawParameterValue("volume");
+    tempoBpm = parameters.getRawParameterValue("bpm");
+    timingChoice = parameters.getRawParameterValue("timing");
+    chordChoice = parameters.getRawParameterValue("chord");
+    playbackChoice = parameters.getRawParameterValue("playback");
 
     constexpr int numOfVoices = 8;
 
@@ -26,10 +43,8 @@ HertzAudioProcessor::HertzAudioProcessor()
 
 void HertzAudioProcessor::prepareToPlay(double sampleRate, int)
 {
-    constexpr double bpm = 120.0;
-    constexpr double stepsPerBeat = 2.0; 
-
-    samplesPerStep = sampleRate * 60.0 / bpm / stepsPerBeat;
+    // The first audio block calculates the selected note length and tempo.
+    samplesPerStep = 1.0;
 
     arpBuffer.ensureSize(8192);
 
@@ -42,7 +57,8 @@ void HertzAudioProcessor::reset()
 {
 
     arpRoot = -1;
-    arpNote = -1;
+    activeNoteCount = 0;
+    lastTiming = lastChord = lastPlayback = -1;
     arpStep = 0; 
 
     samplesUntilStep = 0.0;
@@ -118,17 +134,50 @@ void HertzAudioProcessor::createArp(const juce::MidiBuffer& input, int numSample
 {
     arpBuffer.clear();
 
-    constexpr int intervals[] {0,4,7};
+    if (numSamples <= 0)
+        return;
+
+    constexpr int chordIntervals[][4] {
+        {0, 4, 7, 0}, {0, 3, 7, 0}, {0, 4, 7, 11},
+        {0, 3, 7, 10}, {0, 4, 7, 10}
+    };
+    constexpr double denominators[] {1, 2, 4, 8, 16, 32, 64};
+    const int timing = juce::jlimit(0, 6, static_cast<int>(timingChoice->load()));
+    const int chord = juce::jlimit(0, 4, static_cast<int>(chordChoice->load()));
+    const int playback = juce::jlimit(0, 2, static_cast<int>(playbackChoice->load()));
+    const int toneCount = chord < 2 ? 3 : 4;
+    const double bpm = juce::jlimit(30.0, 300.0, static_cast<double>(tempoBpm->load()));
+    const double nextStepLength = synth.getSampleRate() * (60.0 / bpm) * 4.0 / denominators[timing];
+    // Keep the remaining fraction of the step when tempo changes during a held note.
+    if (playback != 2 && samplesUntilStep > 0.0 && samplesPerStep > 0.0)
+        samplesUntilStep *= nextStepLength / samplesPerStep;
+    samplesPerStep = nextStepLength;
 
     auto stopCurrentNote = [this](int samplePosition)
     {
-        if(arpNote >= 0)
+        for (int i = 0; i < activeNoteCount; ++i)
+            arpBuffer.addEvent(juce::MidiMessage::noteOff(arpChannel, activeNotes[static_cast<size_t>(i)]), samplePosition);
+        activeNoteCount = 0;
+    };
+
+    // Apply control changes on the audio thread and release the old chord first.
+    if (timing != lastTiming || chord != lastChord || playback != lastPlayback)
+    {
+        stopCurrentNote(0);
+        arpStep = 0;
+        samplesUntilStep = 0.0;
+        lastTiming = timing;
+        lastChord = chord;
+        lastPlayback = playback;
+    }
+
+    auto startTone = [&](int tone, int samplePosition)
+    {
+        const int note = arpRoot + chordIntervals[chord][tone];
+        if (note <= 127)
         {
-            arpBuffer.addEvent(
-                juce::MidiMessage::noteOff(arpChannel, arpNote),
-                samplePosition);
-            
-                arpNote = -1;
+            arpBuffer.addEvent(juce::MidiMessage::noteOn(arpChannel, note, arpVelocity), samplePosition);
+            activeNotes[static_cast<size_t>(activeNoteCount++)] = note;
         }
     };
 
@@ -179,27 +228,26 @@ void HertzAudioProcessor::createArp(const juce::MidiBuffer& input, int numSample
             continue;
         }
 
-        // start next chord tone
-
-        if(samplesUntilStep <= 0.0)
+        if (samplesUntilStep <= 0.0)
         {
             stopCurrentNote(sample);
-
-            const int nextNote = arpRoot + intervals[arpStep];
-
-            if(nextNote <= 127)
+            if (playback == 2)
             {
-                arpBuffer.addEvent(juce::MidiMessage::noteOn(arpChannel, nextNote ,arpVelocity), sample);
-
-                arpNote = nextNote;
+                for (int tone = 0; tone < toneCount; ++tone)
+                    startTone(tone, sample);
+                // Chord press sustains until release or a control/key change.
+                samplesUntilStep = 1.0;
             }
-
-            arpStep = (arpStep + 1) % 3;
-            samplesUntilStep += samplesPerStep;
+            else
+            {
+                const int tone = playback == 1 ? toneCount - 1 - arpStep : arpStep;
+                startTone(tone, sample);
+                arpStep = (arpStep + 1) % toneCount;
+                samplesUntilStep += samplesPerStep;
+            }
         }
 
-        samplesUntilStep -= 1.0;
-
+        if (playback != 2)
+            samplesUntilStep -= 1.0;
     }
-
 }
